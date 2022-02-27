@@ -34,17 +34,16 @@ def cut_out_eye_img(img_cv2, eye_points):
     return eye_img, x_min, x_max, y_min, y_max, eye_points_local
 
 
-def detect_pupil(img_negative, eye_points):
-    # 重み
-    WEIGHT_V = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
+# 重み（工夫すれば精度が向上するかも）
+WEIGHT_H = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
+WEIGHT_V = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
 
+
+def detect_pupil(img_negative, eye_points):
     # 目の周りを切り出す
     eye_img_negative, x_min, _, y_min, _, eye_points_local = cut_out_eye_img(img_negative, eye_points)
     # print(f'x_min={x_min}')
     # print(f'y_min={y_min}')
-
-    # # 画像の大きさ
-    # height, width = eye_img_negative.shape[:2]
 
     # 目の部分をマスク処理
     eye_mask = np.zeros_like(eye_img_negative)
@@ -55,14 +54,13 @@ def detect_pupil(img_negative, eye_points):
     sum_x = np.sum(eye_img_negative_masked, axis=0)
 
     # 重み付き移動平均を求める
-    weighing_moving_ave_x = np.convolve(sum_x, WEIGHT_V, mode='same')
+    weighing_moving_ave_x = np.convolve(sum_x, WEIGHT_H, mode='same')
 
     # 横方向の和を求める
     sum_y = np.sum(eye_img_negative_masked, axis=1)
 
     # 重み付き移動平均を求める
-    v = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
-    weighing_moving_ave_y = np.convolve(sum_y, v, mode='same')
+    weighing_moving_ave_y = np.convolve(sum_y, WEIGHT_V, mode='same')
 
     pupil_x = np.argmax(weighing_moving_ave_x) + x_min
     pupil_y = np.argmax(weighing_moving_ave_y) + y_min
@@ -72,9 +70,6 @@ def detect_pupil(img_negative, eye_points):
 
 
 def detect_pupil_2(img_negative, eye_points):
-    # 重み
-    WEIGHT_V = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
-
     # マスク処理によって目の部分だけを取り出す
     eye_mask = np.zeros_like(img_negative)
     eye_mask = cv2.fillConvexPoly(eye_mask, np.array(eye_points), True, 1)
@@ -84,14 +79,13 @@ def detect_pupil_2(img_negative, eye_points):
     sum_x = np.sum(eye_img_negative_masked, axis=0)
 
     # 重み付き移動平均を求める
-    weighing_moving_ave_x = np.convolve(sum_x, WEIGHT_V, mode='same')
+    weighing_moving_ave_x = np.convolve(sum_x, WEIGHT_H, mode='same')
 
     # 横方向の和を求める
     sum_y = np.sum(eye_img_negative_masked, axis=1)
 
     # 重み付き移動平均を求める
-    v = np.array([0.1, 0.2, 0.4, 0.2, 0.1])
-    weighing_moving_ave_y = np.convolve(sum_y, v, mode='same')
+    weighing_moving_ave_y = np.convolve(sum_y, WEIGHT_V, mode='same')
 
     pupil_x = np.argmax(weighing_moving_ave_x)
     pupil_y = np.argmax(weighing_moving_ave_y)
