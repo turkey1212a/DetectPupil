@@ -1,5 +1,5 @@
 import cv2
-import dlib_utils
+import dlib_detector
 import glob
 import numpy as np
 import os
@@ -133,11 +133,13 @@ if __name__ == '__main__':
     output_dir = time.strftime('output_%Y%m%d_%H%M%S')
     os.makedirs(output_dir)
 
+    detector = dlib_detector.dlib_detector()
+
     files = glob.glob(f'{img_dir}/*.jpg')
     for file in files:
         print(f'[{file}]')
         img = cv2.imread(file)
-        landmark = dlib_utils.get_face_landmark(img)
+        landmark = detector.get_face_landmark(img)
         eye_points = [landmark[36:42], landmark[42:48]]
         pupils = detect_pupils(img, eye_points)
         img_copy = img.copy()
